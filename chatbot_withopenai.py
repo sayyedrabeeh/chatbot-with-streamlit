@@ -1,8 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-import google.generativeai as genai
-from google.ai import generativelanguage as gl
+from google.ai import generativelanguage as glm
 
  
 st.set_page_config(
@@ -312,12 +311,11 @@ st.markdown("""
     header {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
-
  
 load_dotenv()
- 
 
-client = gl.TextServiceClient(
+ 
+client = glm.TextServiceClient(
     client_options={"api_key": os.getenv("GEMINI_API_KEY")}
 )
 
@@ -335,21 +333,32 @@ Your responses must:
 
  
 def get_responses_from_llm(messages):
-    prompt = system_instruction + "\n"
+    """Generate response using Gemini API with proper request format"""
+     
+    prompt_text = system_instruction + "\n\n"
     for m in messages:
         if m["role"] == "user":
-            prompt += f"User: {m['content']}\n"
+            prompt_text += f"User: {m['content']}\n"
         elif m["role"] == "assistant":
-            prompt += f"DG: {m['content']}\n"
-    prompt += "DG:"
-    response = client.generate_text(
-        model="models/gemini-2.5",
-        prompt=prompt,
+            prompt_text += f"DG: {m['content']}\n"
+    prompt_text += "DG:"
+    
+     
+    request = glm.GenerateTextRequest(
+        model="models/text-bison-001",   
+        prompt=glm.TextPrompt(text=prompt_text),
         temperature=0.7,
         max_output_tokens=300
     )
-    return response.text
-
+    
+     
+    response = client.generate_text(request=request)
+    
+     
+    if response.candidates:
+        return response.candidates[0].output
+    else:
+        return "I apologize, but I couldn't generate a response. Please try again."
  
 banner_url = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&h=400&fit=crop&q=80"
 
@@ -358,7 +367,7 @@ with st.sidebar:
     st.markdown("*Professional Travel Consultation*")
     st.markdown("---")
     
-    
+   
     with st.expander("🎯 **OUR SERVICES**", expanded=True):
         st.markdown("""
         <div class="info-card">
@@ -374,7 +383,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
-     
+    
     with st.expander("⚡ **QUICK START**", expanded=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -392,7 +401,7 @@ with st.sidebar:
             if st.button("Attractions", use_container_width=True):
                 st.session_state.quick_query = "What are the must-visit attractions in Dubai?"
     
-     
+   
     with st.expander("🌟 **POPULAR DESTINATIONS**", expanded=False):
         st.markdown("""
         <div class="info-card">
@@ -408,7 +417,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
-   
+    
     with st.expander("💡 **TRAVEL TIPS**", expanded=False):
         st.markdown("""
         <div class="info-card">
@@ -423,7 +432,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
-     
+    
     with st.expander("📞 **CONTACT INFO**", expanded=False):
         st.markdown("""
         <div class="info-card">
@@ -435,7 +444,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
-  
+ 
     with st.expander("⚙️ **SESSION CONTROL**", expanded=False):
         if st.button("🔄 New Consultation", type="secondary", use_container_width=True):
             st.session_state.messages = [
