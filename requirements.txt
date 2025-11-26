@@ -110,3 +110,6 @@ watchgod==0.8.2
 wcwidth==0.2.14
 whitenoise==6.11.0
 zope.interface==8.0.1
+google-generativeai
+streamlit
+python-dotenv

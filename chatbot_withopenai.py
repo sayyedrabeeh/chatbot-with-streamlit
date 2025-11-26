@@ -1,58 +1,66 @@
-
-from dotenv import load_dotenv
-from openai import OpenAI
+import os
 import streamlit as st
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-load_dotenv() 
-client = OpenAI()
+ 
+load_dotenv()
+ 
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+ 
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 def get_responses_from_llm(messages):
-   completion = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages
-)
+    
+    history = []
+    for m in messages:
+        history.append({"role": m["role"], "parts": [m["content"]]})
 
-   return completion.choices[0].message.content
+    response = model.generate_content(history)
+    return response.text
 
-initial_messages=[
-        { "role": "system",
-            "content": ''' you are a trip planner in dubai . you are an expert in dubai tourism locations food events ,
-                       hotels etc  you are able to guide users to plan"
-                       their vaccations to dubat you should response proffesssionaly, your name dubai ginne short name DG 
-                       always introduce  first with your name,response shouldn't exceed 200 words  always ask questions
-                       help them to plan a trip finally give a daywise itnerary'''
-        },
-        {
-            "role": "assistant",
-            "content": "  your expert trip planner how can i help you  "
-        }
-    ]
+ 
+
+initial_messages = [
+    {
+        "role": "system",
+        "content": """you are a trip planner in dubai . you are an expert 
+        in dubai tourism locations food events, hotels etc. You guide users 
+        to plan their vacations professionally. Your name is Dubai Ginnee (DG). 
+        Always introduce first with your name, respond within 200 words, always 
+        ask follow-up questions and give a day-wise itinerary."""
+    },
+    {
+        "role": "assistant",
+        "content": "I am Dubai Ginnee (DG), your expert trip planner. How can I help you?"
+    }
+]
 
 if 'messages' not in st.session_state:
-    st.session_state.messages=initial_messages
-st.title('Dubai trip planner')
-for messages in st.session_state.messages:
-    if messages['role'] != 'system':
-      with st.chat_message(messages['role']):
-          st.markdown(messages['content'])
+    st.session_state.messages = initial_messages
 
-user_input = st.chat_input("Ask anything to Dubai GiNNee...")
+st.title("Dubai Trip Planner (DG)")
+
+ 
+for msg in st.session_state.messages:
+    if msg["role"] != "system":
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+ 
+user_input = st.chat_input("Ask anything to Dubai Ginnee...")
+
 if user_input:
-    new_messagess= {
-            "role": "user",
-            "content": user_input
-        }
-    st.session_state.messages.append(new_messagess)
-    with st.chat_message(new_messagess['role']):
-            st.markdown(new_messagess['content'])
+    new_user_msg = {"role": "user", "content": user_input}
+    st.session_state.messages.append(new_user_msg)
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
     response = get_responses_from_llm(st.session_state.messages)
-    if response:
-         response_messagess= {
-            "role": "assistant",
-            "content": response
-        }
-    st.session_state.messages.append(response_messagess)
 
-    with st.chat_message(response_messagess['role']):
-            st.markdown(response_messagess['content'])
+    assistant_msg = {"role": "assistant", "content": response}
+    st.session_state.messages.append(assistant_msg)
 
+    with st.chat_message("assistant"):
+        st.markdown(response)
