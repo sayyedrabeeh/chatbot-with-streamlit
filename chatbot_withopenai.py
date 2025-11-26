@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-from google.ai import generativelanguage as glm
+import google.generativeai as genai
 
  
 st.set_page_config(
@@ -311,16 +311,13 @@ st.markdown("""
     header {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
- 
+
 load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
- 
-client = glm.TextServiceClient(
-    client_options={"api_key": os.getenv("GEMINI_API_KEY")}
-)
-
- 
-system_instruction = """
+model = genai.GenerativeModel(
+    "gemini-2.0-flash-exp",  # Latest working model
+    system_instruction="""
 You are Dubai Ginnee (DG), an expert Dubai trip planner.
 You know all Dubai attractions, food spots, hotels, events, and transportation.
 Your responses must:
@@ -330,36 +327,22 @@ Your responses must:
 - Provide day-wise itinerary guidance.
 - Be structured and professional.
 """
+)
 
- 
+
 def get_responses_from_llm(messages):
-    """Generate response using Gemini API with proper request format"""
-     
-    prompt_text = system_instruction + "\n\n"
+    """Generate response using the correct google.generativeai library"""
+    gemini_messages = []
     for m in messages:
-        if m["role"] == "user":
-            prompt_text += f"User: {m['content']}\n"
-        elif m["role"] == "assistant":
-            prompt_text += f"DG: {m['content']}\n"
-    prompt_text += "DG:"
-    
-     
-    request = glm.GenerateTextRequest(
-        model="models/text-bison-001",   
-        prompt=glm.TextPrompt(text=prompt_text),
-        temperature=0.7,
-        max_output_tokens=300
-    )
-    
-     
-    response = client.generate_text(request=request)
-    
-     
-    if response.candidates:
-        return response.candidates[0].output
-    else:
-        return "I apologize, but I couldn't generate a response. Please try again."
- 
+        if m["role"] == "system":
+            continue
+        role = "model" if m["role"] == "assistant" else "user"
+        gemini_messages.append({
+            "role": role,
+            "parts": [{"text": m["content"]}]
+        })
+    response = model.generate_content(gemini_messages)
+    return response.text
 banner_url = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&h=400&fit=crop&q=80"
 
 with st.sidebar:
@@ -367,7 +350,6 @@ with st.sidebar:
     st.markdown("*Professional Travel Consultation*")
     st.markdown("---")
     
-   
     with st.expander("🎯 **OUR SERVICES**", expanded=True):
         st.markdown("""
         <div class="info-card">
@@ -382,7 +364,6 @@ with st.sidebar:
             </ul>
         </div>
         """, unsafe_allow_html=True)
-    
     
     with st.expander("⚡ **QUICK START**", expanded=True):
         col1, col2 = st.columns(2)
@@ -401,7 +382,7 @@ with st.sidebar:
             if st.button("Attractions", use_container_width=True):
                 st.session_state.quick_query = "What are the must-visit attractions in Dubai?"
     
-   
+    
     with st.expander("🌟 **POPULAR DESTINATIONS**", expanded=False):
         st.markdown("""
         <div class="info-card">
@@ -432,7 +413,7 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
-    
+
     with st.expander("📞 **CONTACT INFO**", expanded=False):
         st.markdown("""
         <div class="info-card">
@@ -444,7 +425,6 @@ with st.sidebar:
         </div>
         """, unsafe_allow_html=True)
     
- 
     with st.expander("⚙️ **SESSION CONTROL**", expanded=False):
         if st.button("🔄 New Consultation", type="secondary", use_container_width=True):
             st.session_state.messages = [
@@ -458,7 +438,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("© 2024 Dubai Trip Planner\nPowered by Advanced AI")
 
- 
+
 st.markdown('<div class="banner-container">', unsafe_allow_html=True)
 st.image(banner_url, use_container_width=True)
 st.markdown("""
@@ -469,7 +449,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
- 
+
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
@@ -478,7 +458,6 @@ if "messages" not in st.session_state:
         }
     ]
 
- 
 if "quick_query" in st.session_state:
     quick_query = st.session_state.quick_query
     del st.session_state.quick_query
@@ -488,26 +467,18 @@ if "quick_query" in st.session_state:
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.rerun()
 
- 
 for msg in st.session_state.messages:
     if msg["role"] != "system":
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-
- 
 user_input = st.chat_input("Describe your travel requirements...")
 
 if user_input:
- 
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
-
- 
     with st.spinner("Consulting our travel experts..."):
         response = get_responses_from_llm(st.session_state.messages)
-    
- 
     st.session_state.messages.append({"role": "assistant", "content": response})
     with st.chat_message("assistant"):
         st.markdown(response)
