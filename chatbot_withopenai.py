@@ -2,6 +2,7 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 import google.generativeai as genai
+from google.ai import generativelanguage as gl
 
  
 st.set_page_config(
@@ -314,12 +315,14 @@ st.markdown("""
 
  
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+ 
+
+client = gl.TextServiceClient(
+    client_options={"api_key": os.getenv("GEMINI_API_KEY")}
+)
 
  
-model = genai.GenerativeModel(
-    "models/gemini-2.0-flash-exp",
-    system_instruction="""
+system_instruction = """
 You are Dubai Ginnee (DG), an expert Dubai trip planner.
 You know all Dubai attractions, food spots, hotels, events, and transportation.
 Your responses must:
@@ -329,20 +332,22 @@ Your responses must:
 - Provide day-wise itinerary guidance.
 - Be structured and professional.
 """
-)
 
  
 def get_responses_from_llm(messages):
-    gemini_messages = []
+    prompt = system_instruction + "\n"
     for m in messages:
-        if m["role"] == "system":
-            continue
-        role = "model" if m["role"] == "assistant" else "user"
-        gemini_messages.append({
-            "role": role,
-            "parts": [{"text": m["content"]}]
-        })
-    response = model.generate_content(gemini_messages)
+        if m["role"] == "user":
+            prompt += f"User: {m['content']}\n"
+        elif m["role"] == "assistant":
+            prompt += f"DG: {m['content']}\n"
+    prompt += "DG:"
+    response = client.generate_text(
+        model="models/gemini-2.5",
+        prompt=prompt,
+        temperature=0.7,
+        max_output_tokens=300
+    )
     return response.text
 
  
