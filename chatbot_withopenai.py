@@ -1,8 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-import google.generativeai as genai
-
+import google.ai.generativelanguage as genai
  
 st.set_page_config(
     page_title="Dubai Trip Planner - Professional Travel Planning",
