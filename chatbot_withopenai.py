@@ -318,7 +318,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
  
 model = genai.GenerativeModel(
-    "gemini-1.5-flash",  
+    "models/gemini-2.0-flash",  
     system_instruction="""
 You are Dubai Ginnee (DG), an expert Dubai trip planner.
 You know all Dubai attractions, food spots, hotels, events, and transportation.
@@ -330,9 +330,9 @@ Your responses must:
 - Be structured and professional.
 """
 )
-
+ 
 def get_responses_from_llm(messages):
-    """Generate response using the correct google.generativeai library"""
+   
     try:
          
         gemini_messages = []
