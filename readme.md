@@ -24,10 +24,10 @@ It helps users plan itineraries, get hotel/restaurant suggestions, attractions, 
 
 ##  Demo & Screenshots  
 
-![App Banner](https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&h=400&fit=crop&q=80)  
-
-![Chat Interface Example](https://raw.githubusercontent.com/sayyedrabeeh/chatbot-with-streamlit/main/assets/chat_screenshot.png)  
+![App Banner](a.png)  
 *Example chat-based itinerary planning flow*
+
+![Chat Interface Example](aa.png)  
 
 👉 You can also try the live app [here](https://dubaiginnee.streamlit.app)
 
