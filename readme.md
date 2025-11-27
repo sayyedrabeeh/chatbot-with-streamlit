@@ -85,12 +85,6 @@ streamlit run chatbot_withopenai.py
 └── (optional) assets/        # images/screenshots used in README or app  
 ```
 
----
-
  
-```
-
  
-
-[1]: https://docs.streamlit.io/deploy/streamlit-community-cloud/share-your-app?utm_source=chatgpt.com "Share your app - Streamlit Docs"
-[2]: https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/?utm_source=chatgpt.com "How to Write a Good README File for Your GitHub Project"
+ 
